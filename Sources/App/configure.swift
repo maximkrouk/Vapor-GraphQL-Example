@@ -4,18 +4,12 @@ import Vapor
 
 // configures your application
 public func configure(_ app: Application) throws {
-    try configureFiles(app)
-    
     try configureCors(app)
     
     try initializeDatabase(app)
     try addMigrations(app)
     
     try routes(app)
-}
-
-private func configureFiles(_ app: Application) throws {
-    app.middleware.use(FileMiddleware(publicDirectory: app.directory.publicDirectory))
 }
 
 private func configureCors(_ app: Application) throws {
