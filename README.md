@@ -25,6 +25,6 @@ https://theswiftdev.com/practical-server-side-swift-using-vapor-4-book/
 
 > Tag `2.0.0`
 
-Тут немного, но это SPA с авторизацией через токены (просто токены)
+Тут немного, но это SPA с авторизацией через токены (просто Bearer токены)
 
 ![Lab2](./Assets/Lab2.png)
