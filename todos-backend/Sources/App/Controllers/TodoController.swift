@@ -11,14 +11,11 @@ extension GenericController where Model == TodoModel {
     
     @discardableResult
     static func setupRoutes(_ builder: RoutesBuilder) -> RoutesBuilder {
-        let schemaPath = PathComponent(stringLiteral: Model.schema)
-        let idPath = PathComponent(stringLiteral: ":".appending(idKey))
         return Builder(builder.grouped(schemaPath))
-            .set { $0.on(.GET, use: readAll) }
-            .set { $0.on(.POST, use: create) }
+            .set { $0.get(use: readAll) }
+            .set { $0.post(use: create) }
             .set { $0.grouped(idPath) }
-            .set { $0.on(.GET, use: _readByID) }
-            .set { $0.on(.DELETE, use: _deleteByID) }
+            .set { $0.on(.DELETE, use: protected(using: UserModel.JWTPayload.self, handler: _deleteByID)) }
             .build()
     }
     
@@ -39,4 +36,5 @@ extension GenericController where Model == TodoModel {
             .filter(\.$user.$id, .equal, payload.userID).all()
             .map { $0.map(\.output) }
     }
+    
 }

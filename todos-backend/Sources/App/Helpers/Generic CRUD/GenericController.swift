@@ -1,10 +1,17 @@
 import Vapor
 import Fluent
 
-struct GenericController<Model: APIModel>
+enum GenericController<Model: APIModel>
 where Model.IDValue: LosslessStringConvertible {
+    
     /// ID parameter key
-    static var idKey: String { ":id" }
+    static var idKey: String { "id" }
+    
+    /// ID path component
+    static var idPath: PathComponent { .init(stringLiteral: ":\(idKey)") }
+    
+    /// Schema path component
+    static var schemaPath: PathComponent { .init(stringLiteral: Model.schema) }
     
     /// Extracts id parameter from a database
     static func getID(_ req: Request) throws -> Model.IDValue {
@@ -73,8 +80,6 @@ where Model.IDValue: LosslessStringConvertible {
     /// ```
     @discardableResult
     static func _setupRoutes(_ builder: RoutesBuilder) -> RoutesBuilder {
-        let schemaPath = PathComponent(stringLiteral: Model.schema)
-        let idPath = PathComponent(stringLiteral: idKey)
         return Builder(builder.grouped(schemaPath))
             .set { $0.on(.GET, use: _readAll) }
             .set { $0.on(.POST, use: _create) }
@@ -83,6 +88,45 @@ where Model.IDValue: LosslessStringConvertible {
             .set { $0.on(.PUT, use: _updateByID) }
             .set { $0.on(.DELETE, use: _deleteByID) }
             .build()
+    }
+    
+}
+
+// MARK: - Secure routing
+
+extension GenericController {
+    
+    /// Protects the route
+    static func protected<Requirement: Authenticatable, Response>(
+        _ req: Request,
+        using auth: Requirement.Type,
+        handler: @escaping (Request) throws -> Response
+    ) throws -> Response { try protected(using: auth, handler: handler)(req) }
+    
+    
+    /// Protects the route
+    static func protected<Requirement: Authenticatable, Response>(
+        _ req: Request,
+        using auth: Requirement.Type,
+        handler: @escaping (Request, Requirement) throws -> Response
+    ) throws -> Response { try protected(using: auth, handler: handler)(req) }
+    
+    /// Protects the route
+    static func protected<Requirement: Authenticatable, Response>(
+        using auth: Requirement.Type,
+        handler: @escaping (Request) throws -> Response
+    ) -> (Request) throws -> Response {
+        protected(using: auth) { request, _ in try handler(request) }
+    }
+    
+    /// Protects the route
+    static func protected<Requirement: Authenticatable, Response>(
+        using auth: Requirement.Type,
+        handler: @escaping (Request, Requirement) throws -> Response
+    ) -> (Request) throws -> Response {
+        { request in
+            return try handler(request, try request.auth.require(auth))
+        }
     }
     
 }

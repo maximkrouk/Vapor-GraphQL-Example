@@ -15,6 +15,8 @@ public func configure(_ app: Application) throws {
     try routes(app)
 }
 
+// MARK: - Configurations
+
 private func configureCors(_ app: Application) throws {
     let corsConfiguration = CORSMiddleware.Configuration(
         allowedOrigin: .all,
@@ -49,11 +51,13 @@ private func addMigrations(_ app: Application) throws {
     app.migrations.add(Migrations.Todos.Create())
 }
 
-extension String {
+// MARK: - JWT Helper Stuff
+
+private extension String {
     var bytes: [UInt8] { .init(self.utf8) }
 }
 
-extension JWKIdentifier {
+private extension JWKIdentifier {
     static let `public` = JWKIdentifier(string: "public")
     static let `private` = JWKIdentifier(string: "private")
 }

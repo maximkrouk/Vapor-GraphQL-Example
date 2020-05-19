@@ -53,6 +53,10 @@ extension UserModel {
 
 extension UserModel {
     
+    struct LoginResponse: Content {
+        var token: String
+    }
+    
     struct Output: Content {
         var id: UUID?
         var username: String
@@ -96,11 +100,9 @@ struct JWTUserModelBearerAuthenticator: JWTAuthenticator {
     typealias User = UserModel
     
     func authenticate(jwt: UserModel.JWTPayload, for request: Request) -> EventLoopFuture<Void> {
-        UserModel
-            .find(jwt.userID, on: request.db)
-            .map {
-                guard $0 != nil else { return }
-                request.auth.login(jwt)
-            }
+        UserModel.find(jwt.userID, on: request.db).map {
+            guard $0 != nil else { return }
+            request.auth.login(jwt)
+        }
     }
 }
