@@ -31,7 +31,7 @@ SPA
 
 - Backend: Swift (Vapor)
 - Frontend: **VueJS**
-- Auth: Token
+- Auth: **Token (Bearer)**
 
 ## Третья ✅
 
