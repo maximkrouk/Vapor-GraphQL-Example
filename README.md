@@ -15,8 +15,31 @@ https://mxswift.herokuapp.com
 https://theswiftdev.com/practical-server-side-swift-using-vapor-4-book/
 
 
-> _Репозиторий приватный, так как делаю в спешке и не слежу за чистотой кода, не хочу это в паблик выкладывать))_
-> _Хотя GenericController отполирую и выложу на [gist](https://gist.github.com/maximkrouk), наверное_
+> _Репозиторий приватный, так как делаю в спешке и не слежу за чистотой кода JS, пока не хочу это в паблик выкладывать))_
+> _Хотя GenericController выложил на [gist](https://gist.github.com/maximkrouk/7dccc660f917e634b3b6cfea006e5cee)_
+
+
+Инструкция по запуску
+
+```swift
+// BACKEND
+> Открыть ./todos-backend/Package.swift в Xcode
+> Подождать пока подтянутся зависимости
+> В продублировать схему `todos`
+> Задать аргумент запуска `--auto-migrate`
+> Запустить новую схему
+
+// FRONTEND
+> Открыть ./todos-frontend в терминале
+> Выполнить команду `npm run serve`
+
+// BROWSER
+> Backend будет работать на http://localhost:8080
+> Frontend будет работать на http://localhost:8081
+
+> Зайти на http://localhost:8081
+```
+
 ## Первая ✅
 
 > **Сдал очно**
