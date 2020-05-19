@@ -7,7 +7,7 @@
 import JWT
 import Vapor
 
-extension GenericController where Model: UserModel {
+extension GenericController where Model == UserModel {
     
     @discardableResult
     static func setupRoutes(_ builder: RoutesBuilder) -> RoutesBuilder {
@@ -30,7 +30,7 @@ extension GenericController where Model: UserModel {
     
     static func login(_ req: Request) throws -> EventLoopFuture<LoginResponse> {
         let input = try req.content.decode(UserModel.Input.self)
-        return eagerLoadedQuery(for: UserModel.self, on: req.db)
+        return UserModel.eagerLoadedQuery(on: req.db)
             .filter(\.$username, .equal, input.username).first()
             .unwrap(or: Abort(.notFound))
             .guard({ (try? Bcrypt.verify(input.password, created: $0.passwordHash)) == true },

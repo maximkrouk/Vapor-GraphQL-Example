@@ -29,13 +29,13 @@ extension GenericController where Model == TodoModel {
         
         model.$user.id = payload.userID
         return model.save(on: req.db)
-            .flatMap { Model.extract(model.id, on: req.db) }
+            .flatMap { model.load(on: req.db) }
             .unwrap(or: Abort(.notFound))
     }
     
     static func readAll(_ req: Request) throws -> EventLoopFuture<[TodoModel.Output]> {
         let payload = try req.auth.require(UserModel.JWTPayload.self)
-        return eagerLoadedQuery(for: Model.self, on: req.db)
+        return Model.eagerLoadedQuery(on: req.db)
             .filter(\.$user.$id, .equal, payload.userID).all()
             .map { $0.map(\.output) }
     }

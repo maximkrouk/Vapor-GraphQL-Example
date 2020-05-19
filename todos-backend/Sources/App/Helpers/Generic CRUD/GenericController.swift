@@ -1,44 +1,44 @@
-//
-//  GenericController.swift
-//  App
-//
-//  Created by Maxim Krouk on 5/14/20.
-//
-
 import Vapor
 import Fluent
 
 struct GenericController<Model: APIModel>
 where Model.IDValue: LosslessStringConvertible {
-    static var idKey: String { "id" }
+    /// ID parameter key
+    static var idKey: String { ":id" }
     
-    static func getId(_ req: Request) throws -> Model.IDValue {
+    /// Extracts id parameter from a database
+    static func getID(_ req: Request) throws -> Model.IDValue {
         guard let id = req.parameters.get(idKey, as: Model.IDValue.self) else {
             throw Abort(.badRequest)
         }
         return id
     }
     
+    /// Creates a new l managed objects in a database
     static func _findByID(_ req: Request) throws -> EventLoopFuture<Model> {
-        Model.find(try getId(req), on: req.db).unwrap(or: Abort(.notFound))
+        Model.find(try getID(req), on: req.db).unwrap(or: Abort(.notFound))
     }
     
+    /// Creates a new l managed objects in a database
     static func _create(_ req: Request) throws -> EventLoopFuture<Model.Output> {
         let request = try req.content.decode(Model.Input.self)
         let model = try Model(request)
         return model.save(on: req.db)
-            .flatMap { model.extract(from: req.db) }
+            .flatMap { model.load(on: req.db) }
             .unwrap(or: Abort(.notFound))
     }
     
+    /// Reads all managed objects' output from a database
     static func _readAll(_ req: Request) throws -> EventLoopFuture<Page<Model.Output>> {
-        eagerLoadedQuery(for: Model.self, on: req.db).paginate(for: req).map { $0.map(\.output) }
+        Model.eagerLoadedQuery(on: req.db).paginate(for: req).map { $0.map(\.output) }
     }
 
+    /// Reads specified managed object' output from a database
     static func _readByID(_ req: Request) throws -> EventLoopFuture<Model.Output> {
-        Model.extract(try getId(req), on: req.db).unwrap(or: Abort(.notFound))
+        Model.load(try getID(req), on: req.db).unwrap(or: Abort(.notFound))
     }
     
+    /// Updates specified managed object in a database
     static func _updateByID(_ req: Request) throws -> EventLoopFuture<Model.Output> {
         let content = try req.content.decode(Model.Update.self)
         return try _findByID(req)
@@ -46,14 +46,31 @@ where Model.IDValue: LosslessStringConvertible {
                 try modification(of: model) { try $0.update(content) }
         }
         .flatMap { $0.update(on: req.db).transform(to: $0) }
-        .flatMap { Model.extract($0.id, on: req.db) }
+        .flatMap { Model.load($0.id, on: req.db) }
         .unwrap(or: Abort(.notFound))
     }
     
+    /// Deletes managed object from a database
     static func _deleteByID(_ req: Request) throws -> EventLoopFuture<HTTPStatus> {
         try _findByID(req).flatMap { $0.delete(on: req.db) }.transform(to: .ok)
     }
     
+    /// Makes initial routes setup
+    ///
+    /// Uses default methods (without auth stuff) to setup routes:
+    /// ```
+    /// ┌––––––––––┬–––––––––––––┐
+    /// |   GET    | /schema     |
+    /// ├––––––––––┼–––––––––––––┤
+    /// |   POST   | /schema     |
+    /// ├––––––––––┼–––––––––––––┤
+    /// |   GET    | /schema/:id |
+    /// ├––––––––––┼–––––––––––––┤
+    /// |   PUT    | /schema/:id |
+    /// ├––––––––––┼–––––––––––––┤
+    /// |  DELETE  | /schema/:id |
+    /// └––––––––––┴–––––––––––––┘
+    /// ```
     @discardableResult
     static func _setupRoutes(_ builder: RoutesBuilder) -> RoutesBuilder {
         let schemaPath = PathComponent(stringLiteral: Model.schema)
