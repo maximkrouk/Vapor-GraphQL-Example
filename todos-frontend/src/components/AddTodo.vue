@@ -73,14 +73,7 @@
           content: this.comment
         }
 
-        fetch("http://localhost:8080/todos/", {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + this.jwt
-          },
-          body: JSON.stringify(input)
-        }).then(() => this.$emit("onAdded"))
+        this.$emit('addItem', input)
         
         // Hide the modal manually
         this.$nextTick(() => {

@@ -12,6 +12,8 @@
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
     data() {
         return {
@@ -23,28 +25,23 @@ export default {
     },
     methods: {
         login() {
-            fetch("http://localhost:8080/users/login", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(this.input)
+            var reqBody = {
+                "query" : `mutation Login { login(username:"${this.input.username}", password:"${this.input.password}") { token } }`
+            }
+
+            axios
+            .post('http://localhost:8080/graphQL', reqBody)
+            .then(response => {
+                var content = JSON.parse(response.request.response)
+                console.log(content)
+                localStorage.setItem('jwt', content.data.login.token)
+                this.$emit('onLogin')
             })
-            .then((request) => {
-                if (request.statusText.toLowerCase() == "ok") {
-                    request
-                        .json()
-                        .then((json) => {
-                            console.log(JSON.stringify(json))
-                            localStorage.setItem('jwt', json.token)
-                        })
-                        .then(() => this.$emit('onLogin'))
-                }
-            })
+            .catch(error => console.error(error))
         },
         toRegister() {
             this.$emit("toRegister")
-        }
+        },
     },
     computed: {
         jwt() {

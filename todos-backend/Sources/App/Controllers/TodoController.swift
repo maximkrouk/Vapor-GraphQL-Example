@@ -44,8 +44,10 @@ extension GenericController where Model == TodoModel {
             .map { $0.map(\.output) }
     }
     
-    static func deleteTodo(by id: UserModel.IDValue, on database: Database) -> EventLoopFuture<HTTPStatus> {
-        UserModel.query(on: database).filter(\.$id == id).first()
+    static func deleteTodo(by id: TodoModel.IDValue, _ payload: UserModel.JWTPayload, on database: Database) -> EventLoopFuture<HTTPStatus> {
+        Model.eagerLoadedQuery(on: database)
+            .filter(\.$user.$id, .equal, payload.userID)
+            .filter(\.$id, .equal, id).first()
             .unwrap(or: Abort(.notFound))
             .flatMap { $0.delete(on: database) }
             .transform(to: .ok)

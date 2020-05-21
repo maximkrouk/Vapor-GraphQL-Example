@@ -22,9 +22,7 @@ export default {
     },
     methods: {
         remove() {
-            fetch("http://localhost:8080/todos/" + this.todo.id, {
-                method: 'DELETE'
-            }).then(() => this.$emit('onRemove'))
+            this.$emit('removeItem', this.todo)
         },
         parseJwt(token) {
             var base64Url = token.split('.')[1];

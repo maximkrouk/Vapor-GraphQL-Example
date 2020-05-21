@@ -5,7 +5,7 @@
                 <b-form-input class="mt-2" v-model="input.username" placeholder="Username"></b-form-input>
                 <b-form-input class="mt-2" v-model="input.password" placeholder="Password"></b-form-input>
                 <b-form-input class="mt-2" v-model="helper.confirmPassword" placeholder="Confirm password"></b-form-input>
-                <div v-show="!doPasswordsMatch && !initialState"> 
+                <div v-show="!doPasswordsMatch"> 
                     "Passwords do not match"
                 </div>
                 <b-button variant="primary" class="w-75 mt-2 mx-auto" @click="register">Register</b-button>
@@ -16,6 +16,8 @@
 </template>
 
 <script>
+import axios from 'axios'
+
 export default {
     data() {
         return {
@@ -24,33 +26,27 @@ export default {
                 password: "",
             },
             helper: {
-                confirmPassword: "",
-                initialState: true
+                confirmPassword: ""
             }
         }
     },
     methods: {
         register() {
-            this.initialState = false
             if (!this.doPasswordsMatch) { return }
-            fetch("http://localhost:8080/users/", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(this.input)
+
+            var reqBody = {
+                "query" : `mutation Register { register(username:"${this.input.username}", password:"${this.input.password}") { token } }`
+            }
+
+            axios
+            .post('http://localhost:8080/graphQL', reqBody)
+            .then(response => {
+                var content = JSON.parse(response.request.response)
+                console.log(content)
+                localStorage.setItem('jwt', content.data.register.token)
+                this.$emit('onLogin')
             })
-            .then((request) => {
-                if (request.statusText.toLowerCase() == "ok") {
-                    request
-                        .json()
-                        .then((json) => {
-                            console.log(JSON.stringify(json))
-                            localStorage.setItem('jwt', json.token)
-                        })
-                        .then(() => this.$emit('onLogin'))
-                }
-            })
+            .catch(error => console.error(error))
         },
         toLogin() {
             this.$emit('toLogin')

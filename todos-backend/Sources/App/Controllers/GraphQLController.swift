@@ -33,7 +33,8 @@ enum GraphQLController: FieldKeyProvider {
     }
     
     static func deleteTodo(_ req: Request, arguments: DeleteTodoArguments) throws -> EventLoopFuture<HTTPStatus> {
-        GenericController<TodoModel>.deleteTodo(by: arguments.id, on: req.db)
+        let payload = try req.auth.require(UserModel.JWTPayload.self)
+        return GenericController<TodoModel>.deleteTodo(by: arguments.id, payload, on: req.db)
     }
     
 }

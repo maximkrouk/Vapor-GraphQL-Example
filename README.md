@@ -31,7 +31,7 @@ https://theswiftdev.com/practical-server-side-swift-using-vapor-4-book/
 
 // FRONTEND
 > Открыть ./todos-frontend в терминале
-> Выполнить команду `npm run serve`
+> Выполнить команды `npm install` `npm run serve`
 
 // BROWSER
 > Backend будет работать на http://localhost:8080
@@ -66,9 +66,9 @@ SPA
 - Frontend: VueJS
 - Auth: **JWT**
 
-## Четвертая
+## Четвертая ✅
 
-> `in progress`
+> `4.0.0`
 
 SPA
 
@@ -76,9 +76,9 @@ SPA
 - Frontend: VueJS + **WebSockets**
 - Auth: JWT
 
-## Пятая
+## Пятая ✅
 
-> `in progress`
+> `5.0.0`
 
 SPA
 
