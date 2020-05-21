@@ -1,19 +1,25 @@
 import Fluent
 import Vapor
+import GraphQLKit
 
-final class TodoModel: APIModel {
+final class TodoModel: APIModel, FieldKeyProvider {
     static let schema = "todos"
     
-    @ID
+    enum FieldKey: String {
+        case id, title, content
+        case ownerID = "owner_id"
+    }
+    
+    @ID(custom: fieldKey(.id))
     var id: UUID?
 
-    @Field(key: "title")
+    @Field(key: fieldKey(.title))
     var title: String
     
-    @Field(key: "content")
+    @Field(key: fieldKey(.content))
     var content: String
     
-    @Parent(key: "owner_id")
+    @Parent(key: fieldKey(.ownerID))
     var user: UserModel
     
     init() { }
@@ -45,7 +51,8 @@ extension TodoModel {
 
 extension TodoModel {
     
-    struct Output: Content {
+    struct Output: Content, FieldKeyProvider {
+        enum FieldKey: String { case id, title, content }
         var id: UUID?
         var title: String
         var content: String

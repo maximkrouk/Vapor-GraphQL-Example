@@ -6,6 +6,7 @@
 //
 
 import Vapor
+import Fluent
 
 extension GenericController where Model == TodoModel {
     
@@ -20,13 +21,19 @@ extension GenericController where Model == TodoModel {
     }
     
     static func create(_ req: Request) throws -> EventLoopFuture<TodoModel.Output> {
-        let payload = try req.auth.require(UserModel.JWTPayload.self)
-        let input = try req.content.decode(TodoModel.Input.self)
+        try create(
+            req.content.decode(TodoModel.Input.self),
+            req.auth.require(UserModel.JWTPayload.self),
+            on: req.db
+        )
+    }
+    
+    static func create(_ input: TodoModel.Input, _ payload: UserModel.JWTPayload, on database: Database) throws -> EventLoopFuture<TodoModel.Output> {
         let model = try TodoModel(input)
-        
         model.$user.id = payload.userID
-        return model.save(on: req.db)
-            .flatMap { model.load(on: req.db) }
+        
+        return model.save(on: database)
+            .flatMap { model.load(on: database) }
             .unwrap(or: Abort(.notFound))
     }
     
@@ -37,4 +44,38 @@ extension GenericController where Model == TodoModel {
             .map { $0.map(\.output) }
     }
     
+    static func deleteTodo(by id: UserModel.IDValue, on database: Database) -> EventLoopFuture<HTTPStatus> {
+        UserModel.query(on: database).filter(\.$id == id).first()
+            .unwrap(or: Abort(.notFound))
+            .flatMap { $0.delete(on: database) }
+            .transform(to: .ok)
+    }
+    
+}
+
+final class SomeClass: Model {
+    static var schema: String { "some_classes" }
+    
+    @ID
+    var id: UUID?
+    
+    @Children(for: \Subclass.$owner)
+    var subclasses: [Subclass]
+    
+    init() {}
+}
+
+final class Subclass: Model {
+    static var schema: String { "subclasses" }
+    
+    @ID
+    var id: UUID?
+    
+    @Field(key: "someField")
+    var value: Int // Хз, как с нетипизированными данными работать))
+    
+    @Parent(key: "owner_id")
+    var owner: SomeClass
+    
+    init() {}
 }

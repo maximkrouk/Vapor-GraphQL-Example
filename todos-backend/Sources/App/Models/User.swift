@@ -8,17 +8,24 @@
 import Fluent
 import Vapor
 import JWT
+import GraphQLKit
 
-final class UserModel: APIModel {
+final class UserModel: APIModel, FieldKeyProvider {
     static let schema: String = "users"
     
-    @ID
-    var id: UUID?
+    enum FieldKey: String {
+        case id, username
+        case passwordHash = "password_hash"
+    }
     
-    @Field(key: "username")
+    @ID(custom: fieldKey(.id))
+    var id: UUID?
+    var uuid: UUID { get { id! } set { id = newValue }}
+    
+    @Field(key: fieldKey(.username))
     var username: String
     
-    @Field(key: "password_hash")
+    @Field(key: fieldKey(.passwordHash))
     var passwordHash: String
     
     @Children(for: \TodoModel.$user)
@@ -53,11 +60,13 @@ extension UserModel {
 
 extension UserModel {
     
-    struct LoginResponse: Content {
+    struct LoginResponse: Content, FieldKeyProvider {
+        enum FieldKey: String { case token }
         var token: String
     }
     
-    struct Output: Content {
+    struct Output: Content, FieldKeyProvider {
+        enum FieldKey: String { case id, username }
         var id: UUID?
         var username: String
     }

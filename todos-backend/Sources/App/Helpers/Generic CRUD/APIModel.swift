@@ -69,6 +69,7 @@ extension APIModel {
     static func load(_ id: IDValue?, on database: Database) -> EventLoopFuture<Output?> {
         _load(self, id, on: database)
     }
+    
 }
 
 private func _eagerLoadedQuery<Model: APIModel>(for type: Model.Type, on database: Database) -> QueryBuilder<Model> {
@@ -81,4 +82,10 @@ private func _load<Model: APIModel>(_ type: Model.Type, _ id: Model.IDValue?, on
     return _eagerLoadedQuery(for: type, on: database)
         .filter(\._$id == id).first()
         .map { $0?.output }
+}
+
+import GraphQLKit
+
+extension APIModel where Self: FieldKeyProvider {
+    static func fieldKey(_ key: Self.FieldKey) -> Fluent.FieldKey { .string(key.rawValue) }
 }
